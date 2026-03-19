@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BAMOE Fraud PoC Demo</title>
+  <style>
+    :root {
+      --bg: #f5f8fb;
+      --card: #ffffff;
+      --ink: #1f2937;
+      --muted: #6b7280;
+      --accent: #0f766e;
+      --accent-2: #0ea5e9;
+      --danger: #b91c1c;
+      --warn: #b45309;
+      --ok: #047857;
+      --border: #dbe3ec;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", "SF Pro Text", "Helvetica Neue", sans-serif;
+      color: var(--ink);
+      background: radial-gradient(circle at 10% 0%, #dff4ff 0%, transparent 45%),
+                  radial-gradient(circle at 100% 100%, #e8fff7 0%, transparent 38%),
+                  var(--bg);
+      min-height: 100vh;
+    }
+
+    .wrap {
+      max-width: 980px;
+      margin: 28px auto;
+      padding: 0 16px 32px;
+    }
+
+    .header {
+      margin-bottom: 14px;
+    }
+
+    .title {
+      margin: 0;
+      font-size: 1.65rem;
+      letter-spacing: 0.2px;
+    }
+
+    .sub {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 0.96rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
+    @media (min-width: 900px) {
+      .grid {
+        grid-template-columns: 1.35fr 1fr;
+      }
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: 0 8px 22px rgba(2, 6, 23, 0.05);
+    }
+
+    .section-title {
+      margin: 0 0 12px;
+      font-size: 1.02rem;
+    }
+
+    .fields {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    @media (max-width: 700px) {
+      .fields { grid-template-columns: 1fr; }
+    }
+
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 0.9rem;
+      color: #334155;
+    }
+
+    input, select {
+      border: 1px solid #c8d4e2;
+      border-radius: 9px;
+      padding: 10px 11px;
+      font-size: 0.95rem;
+      background: #fbfdff;
+    }
+
+    .actions {
+      margin-top: 12px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      border: none;
+      border-radius: 10px;
+      padding: 10px 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .primary {
+      background: linear-gradient(90deg, var(--accent), #0d9488);
+      color: white;
+    }
+
+    .ghost {
+      background: #e6f4ff;
+      color: #075985;
+      border: 1px solid #b6def8;
+    }
+
+    .result {
+      min-height: 240px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      width: fit-content;
+    }
+
+    .badge.APPROVE { color: #064e3b; background: #d1fae5; }
+    .badge.REVIEW { color: #78350f; background: #fef3c7; }
+    .badge.BLOCK { color: #7f1d1d; background: #fee2e2; }
+
+    .code {
+      background: #0f172a;
+      color: #e2e8f0;
+      border-radius: 10px;
+      padding: 12px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.84rem;
+      overflow-x: auto;
+      white-space: pre;
+    }
+
+    .meta {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    ul {
+      margin: 0;
+      padding-left: 18px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="header">
+      <h1 class="title">Internal Fraud Screening Demo</h1>
+      <p class="sub">Tiny browser UI for BAMOE PoC. Submits to <strong>/api/fraud/screen</strong> and shows decision output.</p>
+    </div>
+
+    <div class="grid">
+      <section class="card">
+        <h2 class="section-title">Transaction Input</h2>
+        <form id="fraudForm">
+          <div class="fields">
+            <label>Transaction ID
+              <input name="transactionId" value="tx-9001" required>
+            </label>
+            <label>Customer ID
+              <input name="customerId" value="cust-77" required>
+            </label>
+            <label>Amount
+              <input name="amount" type="number" step="0.01" value="9500" required>
+            </label>
+            <label>Currency
+              <input name="currency" value="USD" required>
+            </label>
+            <label>Channel
+              <select name="channel">
+                <option>WEB</option>
+                <option selected>MOBILE</option>
+                <option>ATM</option>
+                <option>BRANCH</option>
+              </select>
+            </label>
+            <label>Device Trusted
+              <select name="deviceTrusted">
+                <option value="true">true</option>
+                <option value="false" selected>false</option>
+              </select>
+            </label>
+            <label>Geo Velocity (km/h)
+              <input name="geoVelocityKmPerHour" type="number" value="900" min="0" max="1500" required>
+            </label>
+            <label>Chargeback Ratio
+              <input name="historicalChargebackRatio" type="number" step="0.01" value="0.18" min="0" required>
+            </label>
+            <label>Account Age (days)
+              <input name="accountAgeDays" type="number" value="3" min="0" required>
+            </label>
+            <label>IP Reputation Risk (0 to 1)
+              <input name="ipReputationRisk" type="number" step="0.01" value="0.93" min="0" max="1" required>
+            </label>
+            <label>Merchant Category
+              <input name="merchantCategory" value="ELECTRONICS" required>
+            </label>
+          </div>
+
+          <div class="actions">
+            <button class="primary" type="submit">Run Fraud Check</button>
+            <button class="ghost" type="button" id="loadHigh">Load High-Risk Sample</button>
+            <button class="ghost" type="button" id="loadLow">Load Low-Risk Sample</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="card result">
+        <h2 class="section-title">Decision Output</h2>
+        <div id="status" class="meta">No request submitted yet.</div>
+        <div id="actionBadge"></div>
+        <div id="score"></div>
+        <div>
+          <strong>Reasons</strong>
+          <ul id="reasons"></ul>
+        </div>
+        <div class="meta" id="nextStep"></div>
+        <div class="meta" id="source"></div>
+        <div>
+          <strong>Raw Response</strong>
+          <div class="code" id="raw">{ }</div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('fraudForm');
+    const statusEl = document.getElementById('status');
+    const badgeEl = document.getElementById('actionBadge');
+    const scoreEl = document.getElementById('score');
+    const reasonsEl = document.getElementById('reasons');
+    const nextStepEl = document.getElementById('nextStep');
+    const sourceEl = document.getElementById('source');
+    const rawEl = document.getElementById('raw');
+
+    function applySample(type) {
+      const f = form.elements;
+      if (type === 'high') {
+        f.transactionId.value = 'tx-9001';
+        f.customerId.value = 'cust-77';
+        f.amount.value = '9500';
+        f.currency.value = 'USD';
+        f.channel.value = 'MOBILE';
+        f.deviceTrusted.value = 'false';
+        f.geoVelocityKmPerHour.value = '900';
+        f.historicalChargebackRatio.value = '0.18';
+        f.accountAgeDays.value = '3';
+        f.ipReputationRisk.value = '0.93';
+        f.merchantCategory.value = 'ELECTRONICS';
+      } else {
+        f.transactionId.value = 'tx-1100';
+        f.customerId.value = 'cust-88';
+        f.amount.value = '25';
+        f.currency.value = 'USD';
+        f.channel.value = 'WEB';
+        f.deviceTrusted.value = 'true';
+        f.geoVelocityKmPerHour.value = '10';
+        f.historicalChargebackRatio.value = '0.01';
+        f.accountAgeDays.value = '500';
+        f.ipReputationRisk.value = '0.05';
+        f.merchantCategory.value = 'GROCERY';
+      }
+    }
+
+    document.getElementById('loadHigh').addEventListener('click', () => applySample('high'));
+    document.getElementById('loadLow').addEventListener('click', () => applySample('low'));
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      const f = form.elements;
+      const payload = {
+        transactionId: f.transactionId.value,
+        customerId: f.customerId.value,
+        amount: Number(f.amount.value),
+        currency: f.currency.value,
+        channel: f.channel.value,
+        deviceTrusted: f.deviceTrusted.value === 'true',
+        geoVelocityKmPerHour: Number(f.geoVelocityKmPerHour.value),
+        historicalChargebackRatio: Number(f.historicalChargebackRatio.value),
+        accountAgeDays: Number(f.accountAgeDays.value),
+        ipReputationRisk: Number(f.ipReputationRisk.value),
+        merchantCategory: f.merchantCategory.value
+      };
+
+      statusEl.textContent = 'Submitting...';
+      badgeEl.innerHTML = '';
+      scoreEl.textContent = '';
+      reasonsEl.innerHTML = '';
+      nextStepEl.textContent = '';
+      sourceEl.textContent = '';
+
+      try {
+        const response = await fetch('/api/fraud/screen', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+        rawEl.textContent = JSON.stringify(data, null, 2);
+
+        if (!response.ok) {
+          statusEl.textContent = 'Request failed. Check payload values.';
+          return;
+        }
+
+        statusEl.textContent = `Transaction ${data.transactionId} evaluated.`;
+        badgeEl.innerHTML = `<span class="badge ${data.action}">${data.action}</span>`;
+        scoreEl.innerHTML = `<strong>Risk Score:</strong> ${data.riskScore}`;
+
+        (data.reasons || []).forEach((r) => {
+          const li = document.createElement('li');
+          li.textContent = r;
+          reasonsEl.appendChild(li);
+        });
+
+        nextStepEl.innerHTML = `<strong>Recommended Next Step:</strong> ${data.recommendedNextStep}`;
+        sourceEl.innerHTML = `<strong>Decision Source:</strong> ${data.decisionSource}`;
+      } catch (err) {
+        statusEl.textContent = 'Could not reach API. Is the app running?';
+        rawEl.textContent = String(err);
+      }
+    });
+  </script>
+</body>
+</html>

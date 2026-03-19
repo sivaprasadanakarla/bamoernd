@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<definitions xmlns="https://www.omg.org/spec/DMN/20240513/MODEL/" xmlns:dmndi="https://www.omg.org/spec/DMN/20230324/DMNDI/" xmlns:feel="https://www.omg.org/spec/DMN/20240513/FEEL/" xmlns:kie="https://kie.org/dmn/extensions/1.0" xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/" xmlns:di="http://www.omg.org/spec/DMN/20180521/DI/" id="fraud-decision-model" name="FraudDecisionModel" namespace="https://company.internal/fraud/bamoe">
+  <decision id="decisionRiskScore" name="riskScore">
+    <variable id="varRiskScore" name="riskScore" typeRef="number" />
+    <informationRequirement id="_03B52A81-BF59-4731-8796-74E6DC30D0E4">
+      <requiredInput href="#inputTransaction" />
+    </informationRequirement>
+    <literalExpression id="exprRiskScore">
+      <text>
+        (if transaction.amount &gt; 5000 then 35 else 0) +
+        (if not(transaction.deviceTrusted) then 20 else 0) +
+        (if transaction.geoVelocityKmPerHour &gt; 700 then 25 else 0) +
+        (if transaction.historicalChargebackRatio &gt; 0.12 then 20 else 0) +
+        (if transaction.accountAgeDays &lt; 14 then 15 else 0) +
+        (if transaction.ipReputationRisk &gt; 0.7 then 30 else 0)
+      </text>
+    </literalExpression>
+  </decision>
+  <decision id="decisionAction" name="decisionAction">
+    <variable id="varDecisionAction" name="decisionAction" typeRef="string" />
+    <informationRequirement id="_36D1A83B-5B9E-4931-BC70-5B70EC21D4E4">
+      <requiredDecision href="#decisionRiskScore" />
+    </informationRequirement>
+    <literalExpression id="exprDecisionAction">
+      <text>
+        if riskScore &gt;= 75 then &quot;BLOCK&quot;
+        else if riskScore &gt;= 45 then &quot;REVIEW&quot;
+        else &quot;APPROVE&quot;
+      </text>
+    </literalExpression>
+  </decision>
+  <inputData id="inputTransaction" name="transaction">
+    <variable id="varTransaction" name="transaction" typeRef="Any" />
+  </inputData>
+  <dmndi:DMNDI>
+    <dmndi:DMNDiagram id="_3A757997-D319-460E-894A-3BB13E4ACB6C" name="Default DRD" useAlternativeInputDataShape="false">
+      <di:extension>
+        <kie:ComponentsWidthsExtension>
+          <kie:ComponentWidths />
+        </kie:ComponentsWidthsExtension>
+      </di:extension>
+      <dmndi:DMNShape id="_8C946D6C-82A2-4E6B-B249-8DA249C51B75" dmnElementRef="decisionRiskScore">
+        <dc:Bounds x="112" y="292" width="160" height="80" />
+      </dmndi:DMNShape>
+      <dmndi:DMNShape id="_CC599DFB-DBC8-4175-89F7-46E1204E729C" dmnElementRef="decisionAction">
+        <dc:Bounds x="112" y="112" width="160" height="80" />
+      </dmndi:DMNShape>
+      <dmndi:DMNShape id="_6E3A8F55-45FA-417B-AAA4-B8E71292D00C" dmnElementRef="inputTransaction">
+        <dc:Bounds x="112" y="472" width="160" height="80" />
+      </dmndi:DMNShape>
+      <dmndi:DMNEdge id="_D6912A08-886B-41B1-A63C-2E78B2F06C83" dmnElementRef="_03B52A81-BF59-4731-8796-74E6DC30D0E4" sourceElement="_6E3A8F55-45FA-417B-AAA4-B8E71292D00C" targetElement="_8C946D6C-82A2-4E6B-B249-8DA249C51B75">
+        <di:waypoint x="192" y="472" />
+        <di:waypoint x="192" y="372" />
+      </dmndi:DMNEdge>
+      <dmndi:DMNEdge id="_C361C34D-9601-407F-9622-D602AB226546" dmnElementRef="_36D1A83B-5B9E-4931-BC70-5B70EC21D4E4" sourceElement="_8C946D6C-82A2-4E6B-B249-8DA249C51B75" targetElement="_CC599DFB-DBC8-4175-89F7-46E1204E729C">
+        <di:waypoint x="192" y="292" />
+        <di:waypoint x="192" y="192" />
+      </dmndi:DMNEdge>
+    </dmndi:DMNDiagram>
+  </dmndi:DMNDI>
+</definitions>

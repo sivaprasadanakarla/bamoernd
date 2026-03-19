@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: bamoe-fraud-poc
+
+server:
+  port: 8080
+
+bamoe:
+  mode: local-dmn
+  base-url: http://localhost:8180
+  endpoint-path: /fraud-decision
+  timeout-ms: 2000
+  api-key: ""
+
+logging:
+  level:
+    com.company.fraud.bamoe: DEBUG

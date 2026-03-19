@@ -34,6 +34,37 @@ This PoC demonstrates how an internal fraud application can use IBM BAMOE 9.x as
 mvn spring-boot:run
 ```
 
+## Browser UI demo (no curl)
+
+The project includes a tiny UI at `src/main/resources/static/index.html`.
+
+### Access
+
+1. Start the app: `mvn spring-boot:run`
+2. Open: `http://localhost:8080/`
+3. The page calls the API endpoint `POST /api/fraud/screen` internally.
+
+### How to use the page
+
+1. Keep the pre-filled values and click **Run Fraud Check** to see a high-risk scenario.
+2. Click **Load Low-Risk Sample** and then **Run Fraud Check** to see an approve scenario.
+3. Click **Load High-Risk Sample** and **Run Fraud Check** to switch back to block scenario.
+
+### What you will see
+
+- Action badge: `APPROVE`, `REVIEW`, or `BLOCK`
+- Risk score
+- Reason list
+- Recommended next step
+- Decision source (`BAMOE_EMBEDDED_DMN`, `BAMOE_MOCK`, or `BAMOE_REMOTE`)
+- Raw JSON response
+
+### Troubleshooting
+
+- If the page does not load, check that the app is running on port 8080.
+- If submit fails, check terminal logs and verify request fields are valid.
+- If you changed server port in `application.yml`, open `http://localhost:<your-port>/`.
+
 ## Demo request
 
 ```bash
